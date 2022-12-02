@@ -5,12 +5,13 @@ import com.monovore.decline._
 import com.monovore.decline.effect._
 import java.net.URI
 import cats.data.NonEmptyList
+import java.nio.file.Path
 
 object CLIParameters:
-  case class Config(psiKey: Option[String], mackerelKey: Option[String], targetUris: NonEmptyList[URI])
+  case class Config(psiKey: Option[String], mackerelKey: Option[String], targetUris: NonEmptyList[URI] | Path)
 
   // Main object以外の場所でvalにすると壊れる!!のでここだけdefとしている
-  def config = (apiKeyForPsi, apiKeyForMackerel, targetUri).mapN(Config.apply)
+  def config = (apiKeyForPsi, apiKeyForMackerel, genericTargetUris).mapN(Config.apply)
 
   val apiKeyForPsi = Opts
     .option[String](
@@ -29,4 +30,8 @@ object CLIParameters:
     )
     .orNone
 
-  val targetUri = Opts.arguments[URI]("target uri")
+  def genericTargetUris: Opts[NonEmptyList[URI] | Path] = targetUriFile orElse targetUris
+
+  val targetUris = Opts.arguments[URI]("target uri")
+
+  val targetUriFile = Opts.option[Path]("target-list", "Target URI list: one URI per line. Precedes by-argument URI list.", "f", "target list file")

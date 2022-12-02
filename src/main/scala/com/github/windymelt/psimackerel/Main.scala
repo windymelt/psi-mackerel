@@ -20,9 +20,9 @@ object Main
   override def main: Opts[IO[ExitCode]] =
     CLIParameters.config map { config =>
       val epoch = java.time.Instant.now()
-      val uris = config.targetUris.map(uri => Uri.fromString(uri.toString).right.get)
       given client: Client[IO] = curlClient
       for
+        uris <- extractUris(config.targetUris)
         scores <- Util.backgroundIndicator("Fetching PSI score...") use { _ =>
           uris.map(uri => PSI().fetchPsiScore(uri, config.psiKey).map(uri -> _)).parSequence // but scala native doesn't support multithreading yet
         }
@@ -77,3 +77,12 @@ object Main
       metrics = metrics,
     )
     mc.defineGraph(graph.pure[Seq])
+
+  private def extractUris(genericUris: NonEmptyList[java.net.URI] | java.nio.file.Path): IO[NonEmptyList[Uri]] =
+    import fs2.io.file.{Files, Path}
+    import fs2.text
+    genericUris match
+      case nel: NonEmptyList[java.net.URI] => nel.map(uri => Uri.fromString(uri.toString).right.get).pure
+      case path: java.nio.file.Path =>
+        val lisIo = Files[IO].readUtf8Lines(Path.fromNioPath(path)).filterNot(_.isBlank).map{ s => Uri.fromString(s).right.get }.compile.toList
+        lisIo.map(lis => NonEmptyList.fromList(lis).get) // TODO: avoid get
