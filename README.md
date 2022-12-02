@@ -53,3 +53,19 @@ You can view short option via `psi-mackerel --help`.
 ### Inspired from aereal/psi-metrics
 
 This tool is inspired from https://github.com/aereal/psi-metrics .
+
+## Dependency
+
+- `libcurl-devel`
+- `clang`
+
+## Release
+
+You will need `llvm-gold` for LTO.
+
+```
+$ NATIVE_MODE=release-fast NATIVE_LTO=thin sbt nativeLink
+```
+
+Then you will get `target/scala-3.2.1/psi-mackerel-out`.
+

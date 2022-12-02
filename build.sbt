@@ -28,5 +28,8 @@ lazy val root = project
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
 //      "io.circe" %% "circe-parser"
-    )
+    ),
+
+    nativeMode := sys.env.get("NATIVE_MODE") getOrElse "debug", // use "release-fast" when release
+    nativeLTO := sys.env.get("NATIVE_LTO") getOrElse "none" // use "thin" when release
   )
