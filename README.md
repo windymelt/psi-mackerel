@@ -49,3 +49,7 @@ https://example.com/3
 #### Shorthands
 
 You can view short option via `psi-mackerel --help`.
+
+### Inspired from aereal/psi-metrics
+
+This tool is inspired from https://github.com/aereal/psi-metrics .
