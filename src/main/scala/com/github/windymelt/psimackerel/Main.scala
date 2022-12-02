@@ -27,7 +27,7 @@ object Main
         scores <- Util.backgroundIndicatorWithCount("Fetching PSI score...", fetchedCount, uris.size) use { _ =>
           uris.map(uri => (PSI().fetchPsiScore(uri, config.psiKey) <* fetchedCount.update(_ + 1)).map(uri -> _)).parSequence // but scala native doesn't support multithreading yet
         }
-        _ <- IO.println("")
+        _ <- IO.println("All PSI scores are fetched")
         _ <- config.mackerelKey match
           case Some(mackerelKey) =>
             import MackerelClient.given
