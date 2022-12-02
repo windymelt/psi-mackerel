@@ -7,7 +7,7 @@ import io.circe.Encoder
 import io.circe.Json
 import com.github.windymelt.psimackerel.MackerelClient.GraphDefinition
 
-class MackerelClient():
+class MackerelClient()(using client: org.http4s.client.Client[IO]):
   import org.http4s._
   import org.http4s.Method.POST
   import MackerelClient._
@@ -16,17 +16,15 @@ class MackerelClient():
 
   val jsonType = org.http4s.MediaType.application.json
   private def postReq(reqUri: Uri, json: io.circe.Json): IO [Unit] =
-    MackerelClient.client use { c =>
-      import org.http4s.client.dsl.io._
-      import org.http4s.headers._
-      import org.http4s.circe._
+    import org.http4s.client.dsl.io._
+    import org.http4s.headers._
+    import org.http4s.circe._
 
-      val req = POST(
-        reqUri,
-        `Content-Type`(jsonType),
-      ).withEntity(json).withHeaders("X-Api-Key" -> "")
-      c.successful(req) *> IO.unit
-    }
+    val req = POST(
+    reqUri,
+    `Content-Type`(jsonType),
+    ).withEntity(json).withHeaders("X-Api-Key" -> "")
+    client.successful(req) *> IO.unit
 
   def defineGraph(defs: Seq[GraphDefinition])(using GraphDefinitionEncoder: Encoder[GraphDefinition]): IO[Unit] =
     import org.http4s.implicits.uri
@@ -39,11 +37,6 @@ class MackerelClient():
     postReq(uri"https://mackerelio.com/api/v0/services/" / serviceName / "tsdb", metrics.asJson)
 
 object MackerelClient:
-  import org.http4s.ember.client._
-  import org.http4s.client._
-
-  val client = EmberClientBuilder.default[IO].build
-
   import io.circe.generic.semiauto._
   import io.circe._
   import com.github.nscala_time.time.Imports._
