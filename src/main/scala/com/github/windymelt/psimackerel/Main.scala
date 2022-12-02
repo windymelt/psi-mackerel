@@ -20,7 +20,7 @@ object Main
   override def main: Opts[IO[ExitCode]] =
     CLIParameters.config map { config =>
       val epoch = java.time.Instant.now()
-      val uris = config.targetUri.map(uri => Uri.fromString(uri.toString).right.get)
+      val uris = config.targetUris.map(uri => Uri.fromString(uri.toString).right.get)
       given client: Client[IO] = curlClient
       for
         scores <- Util.backgroundIndicator("Fetching PSI score...") use { _ =>

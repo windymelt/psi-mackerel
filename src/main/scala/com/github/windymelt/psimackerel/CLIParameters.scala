@@ -7,7 +7,7 @@ import java.net.URI
 import cats.data.NonEmptyList
 
 object CLIParameters:
-  case class Config(psiKey: Option[String], mackerelKey: Option[String], targetUri: NonEmptyList[URI])
+  case class Config(psiKey: Option[String], mackerelKey: Option[String], targetUris: NonEmptyList[URI])
 
   // Main object以外の場所でvalにすると壊れる!!のでここだけdefとしている
   def config = (apiKeyForPsi, apiKeyForMackerel, targetUri).mapN(Config.apply)
