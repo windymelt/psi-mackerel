@@ -21,7 +21,6 @@ lazy val root = project
       "org.http4s" %%% "http4s-circe" % https4sVersion,
       "com.monovore" %%% "decline" % "2.4.0",
       "com.monovore" %%% "decline-effect" % "2.4.0",
-      "com.github.nscala-time" %% "nscala-time" % "2.32.0",
       "org.scalameta" %% "munit" % "0.7.29" % Test,
     ),
 
