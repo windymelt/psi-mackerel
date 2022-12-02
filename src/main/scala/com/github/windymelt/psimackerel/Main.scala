@@ -6,16 +6,22 @@ import org.http4s.curl.CurlApp
 import org.http4s.client.Client
 import com.monovore.decline._
 import com.monovore.decline.effect._
+import cats.implicits._
+
+case class Config(psiKey: Option[String], mackerelKey: Option[String])
 
 object Main extends CommandIOApp(name = "psi-mackerel", header = "Post Google Page Speed Insights score to Mackerel", version = "0.1.0")
     with CurlApp:
   val apiKeyForPsi = Opts.option[String]("psi-api-key", metavar = "API_KEY_FOR_PSI", help = "Optional: Set PSI API key (can get yours at https://developers.google.com/speed/docs/insights/v5/get-started). API may return 429 Too Many Requests error unless you give no API key.").orNone
+  val apiKeyForMackerel = Opts.option[String]("mackerel-api-key", short = "k", metavar = "API_KEY_FOR_MACKEREL", help = "Set Mackerel API key").orNone
+  val config = (apiKeyForPsi, apiKeyForMackerel).mapN(Config.apply)
+
   override def main: Opts[IO[ExitCode]] =
-    apiKeyForPsi map { psiKey =>
+    config map { config =>
       val uri = Uri.fromString("https://www.3qe.us").toOption.get
       given client: Client[IO] = curlClient
       for
-        score <- Util.backgroundIndicator("Fetching PSI score...") use { _ => PSI().fetchPsiScore(uri, psiKey) }
+        score <- Util.backgroundIndicator("Fetching PSI score...") use { _ => PSI().fetchPsiScore(uri, config.psiKey) }
         _ <- IO.println(s"ok: $score")
       yield cats.effect.ExitCode(0)
     }
