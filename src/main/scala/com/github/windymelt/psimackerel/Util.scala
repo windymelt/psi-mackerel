@@ -1,6 +1,7 @@
 package com.github.windymelt.psimackerel
 
 import cats.effect.{ResourceIO, IO, OutcomeIO, Ref}
+import cats.effect.std.Console
 import scala.concurrent.duration._
 import cats.syntax.applicative._
 import scala.language.postfixOps
@@ -13,25 +14,25 @@ object Util:
 
   private def indicator(m: String): IO[Unit] = (
     for
-      _ <- IO.print(s"\r| $m")
+      _ <- Console[IO].error(s"\r| $m")
       _ <- IO.sleep(100 milliseconds)
-      _ <- IO.print(s"\r/ $m")
+      _ <- Console[IO].error(s"\r/ $m")
       _ <- IO.sleep(100 milliseconds)
-      _ <- IO.print(s"\r- $m")
+      _ <- Console[IO].error(s"\r- $m")
       _ <- IO.sleep(100 milliseconds)
-      _ <- IO.print(s"\r\\ $m")
+      _ <- Console[IO].error(s"\r\\ $m")
     yield IO.sleep(100 milliseconds)
   ).foreverM
 
   private def indicatorWithCount(m: String, current: Ref[IO, Int], all: Int): IO[Unit] = (
     for
       c <- current.get
-      _ <- IO.print(s"\r| $m [$c / $all]")
+      _ <- Console[IO].error(s"\r| $m [$c / $all]")
       _ <- IO.sleep(100 milliseconds)
-      _ <- IO.print(s"\r/ $m [$c / $all]")
+      _ <- Console[IO].error(s"\r/ $m [$c / $all]")
       _ <- IO.sleep(100 milliseconds)
-      _ <- IO.print(s"\r- $m [$c / $all]")
+      _ <- Console[IO].error(s"\r- $m [$c / $all]")
       _ <- IO.sleep(100 milliseconds)
-      _ <- IO.print(s"\r\\ $m [$c / $all]")
+      _ <- Console[IO].error(s"\r\\ $m [$c / $all]")
     yield IO.sleep(100 milliseconds)
   ).foreverM

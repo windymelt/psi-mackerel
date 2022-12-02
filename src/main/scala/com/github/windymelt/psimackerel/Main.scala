@@ -1,6 +1,7 @@
 package com.github.windymelt.psimackerel
 
 import cats.effect.{IOApp, IO, ResourceIO, Resource, ExitCode}
+import cats.effect.std.Console
 import org.http4s.Uri
 import org.http4s.curl.CurlApp
 import org.http4s.client.Client
@@ -27,7 +28,8 @@ object Main
         scores <- Util.backgroundIndicatorWithCount("Fetching PSI score...", fetchedCount, uris.size) use { _ =>
           uris.map(uri => (PSI().fetchPsiScore(uri, config.psiKey) <* fetchedCount.update(_ + 1)).map(uri -> _)).parSequence // but scala native doesn't support multithreading yet
         }
-        _ <- IO.println("All PSI scores are fetched")
+        _ <- Console[IO].errorln("")
+        _ <- Console[IO].errorln("All PSI scores are fetched")
         _ <- config.mackerelKey match
           case Some(mackerelKey) =>
             import MackerelClient.given
@@ -44,7 +46,7 @@ object Main
                     val safeUrl =
                         uri.toString.replaceAll("""[^a-zA-Z0-9_\-]""", "-")
                     mc.postServiceMetrics(
-                        "WWW",
+                        config.mackerelService.get,
                         Seq(
                             MackerelClient.ServiceMetric(
                                 s"custom.pagespeed.$safeUrl",
@@ -57,8 +59,8 @@ object Main
                 }.parSequence
               }
             yield ()
-          case None => IO.unit
-        _ <- IO.println("")
+          case None => scores.map { s => IO.println(s"${s._2.map(_ * 100).getOrElse('?')}	${s._1}") }.sequence
+        _ <- Console[IO].errorln("")
       yield cats.effect.ExitCode(0)
     }
 

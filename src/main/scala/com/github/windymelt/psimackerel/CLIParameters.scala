@@ -8,10 +8,10 @@ import cats.data.NonEmptyList
 import java.nio.file.Path
 
 object CLIParameters:
-  case class Config(psiKey: Option[String], mackerelKey: Option[String], targetUris: NonEmptyList[URI] | Path)
+  case class Config(psiKey: Option[String], mackerelKey: Option[String], mackerelService: Option[String], targetUris: NonEmptyList[URI] | Path)
 
   // Main object以外の場所でvalにすると壊れる!!のでここだけdefとしている
-  def config = (apiKeyForPsi, apiKeyForMackerel, genericTargetUris).mapN(Config.apply)
+  def config = (apiKeyForPsi, apiKeyForMackerel, mackerelServiceName, genericTargetUris).mapN(Config.apply)
 
   val apiKeyForPsi = Opts
     .option[String](
@@ -29,6 +29,8 @@ object CLIParameters:
       help = "Set Mackerel API key."
     )
     .orNone
+
+  val mackerelServiceName = Opts.option[String]("service", short = "s", metavar = "service_name", help = "Set Mackerel service name.").orNone
 
   def genericTargetUris: Opts[NonEmptyList[URI] | Path] = targetUriFile orElse targetUris
 
