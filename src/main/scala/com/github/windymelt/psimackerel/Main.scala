@@ -23,9 +23,11 @@ object Main
       given client: Client[IO] = curlClient
       for
         uris <- extractUris(config.targetUris)
-        scores <- Util.backgroundIndicator("Fetching PSI score...") use { _ =>
-          uris.map(uri => PSI().fetchPsiScore(uri, config.psiKey).map(uri -> _)).parSequence // but scala native doesn't support multithreading yet
+        fetchedCount <- cats.effect.Ref.of[IO, Int](0)
+        scores <- Util.backgroundIndicatorWithCount("Fetching PSI score...", fetchedCount, uris.size) use { _ =>
+          uris.map(uri => (PSI().fetchPsiScore(uri, config.psiKey) <* fetchedCount.update(_ + 1)).map(uri -> _)).parSequence // but scala native doesn't support multithreading yet
         }
+        _ <- IO.println("")
         _ <- config.mackerelKey match
           case Some(mackerelKey) =>
             import MackerelClient.given

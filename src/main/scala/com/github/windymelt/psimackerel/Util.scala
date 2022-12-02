@@ -1,6 +1,6 @@
 package com.github.windymelt.psimackerel
 
-import cats.effect.{ResourceIO, IO, OutcomeIO}
+import cats.effect.{ResourceIO, IO, OutcomeIO, Ref}
 import scala.concurrent.duration._
 import cats.syntax.applicative._
 import scala.language.postfixOps
@@ -8,6 +8,9 @@ import scala.language.postfixOps
 object Util:
   def backgroundIndicator(msg: String): ResourceIO[IO[OutcomeIO[Unit]]] =
     indicator(msg).background
+  def backgroundIndicatorWithCount(msg: String, current: Ref[IO, Int], all: Int): ResourceIO[IO[OutcomeIO[Unit]]] =
+    indicatorWithCount(msg, current, all).background
+
   private def indicator(m: String): IO[Unit] = (
     for
       _ <- IO.print(s"\r| $m")
@@ -17,5 +20,18 @@ object Util:
       _ <- IO.print(s"\r- $m")
       _ <- IO.sleep(100 milliseconds)
       _ <- IO.print(s"\r\\ $m")
+    yield IO.sleep(100 milliseconds)
+  ).foreverM
+
+  private def indicatorWithCount(m: String, current: Ref[IO, Int], all: Int): IO[Unit] = (
+    for
+      c <- current.get
+      _ <- IO.print(s"\r| $m [$c / $all]")
+      _ <- IO.sleep(100 milliseconds)
+      _ <- IO.print(s"\r/ $m [$c / $all]")
+      _ <- IO.sleep(100 milliseconds)
+      _ <- IO.print(s"\r- $m [$c / $all]")
+      _ <- IO.sleep(100 milliseconds)
+      _ <- IO.print(s"\r\\ $m [$c / $all]")
     yield IO.sleep(100 milliseconds)
   ).foreverM
