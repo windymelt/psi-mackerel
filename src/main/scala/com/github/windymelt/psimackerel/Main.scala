@@ -10,7 +10,7 @@ object Main extends cats.effect.IOApp with CurlApp:
     val uri = Uri.fromString("https://www.3qe.us").toOption.get
     given client: Client[IO] = curlClient
     for
-      score <- Util.backgroundIndicator use { _ => PSI().fetchPsiScore(uri) }
+      score <- Util.backgroundIndicator("Fetching PSI score...") use { _ => PSI().fetchPsiScore(uri) }
       _ <- IO.println(s"ok: $score")
     yield cats.effect.ExitCode(0)
 

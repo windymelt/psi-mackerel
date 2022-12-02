@@ -6,7 +6,7 @@ import cats.syntax.applicative._
 import scala.language.postfixOps
 
 object Util:
-  def backgroundIndicator: ResourceIO[IO[OutcomeIO[Unit]]] = indicator.background
-  private def indicator: IO[Unit] =
-    IO.sleep(100 milliseconds) *> (IO.print("\r|") *> IO.sleep(100 milliseconds) *> IO.print("\r/") *> IO.sleep(100 milliseconds) *> IO.print("\r-") *> IO.sleep(100 milliseconds) *> IO.print("\r\\") *> IO.sleep(100 milliseconds)).foreverM
+  def backgroundIndicator(msg: String): ResourceIO[IO[OutcomeIO[Unit]]] = indicator(msg).background
+  private def indicator(m: String): IO[Unit] =
+    IO.sleep(100 milliseconds) *> (IO.print(s"\r| $m") *> IO.sleep(100 milliseconds) *> IO.print(s"\r/ $m") *> IO.sleep(100 milliseconds) *> IO.print(s"\r- $m") *> IO.sleep(100 milliseconds) *> IO.print(s"\r\\ $m") *> IO.sleep(100 milliseconds)).foreverM
 
