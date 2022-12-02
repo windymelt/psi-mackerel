@@ -7,6 +7,7 @@ import org.http4s.client.Client
 import com.monovore.decline._
 import com.monovore.decline.effect._
 import cats.implicits._
+import cats.data.NonEmptyList
 
 object Main
     extends CommandIOApp(
@@ -19,11 +20,11 @@ object Main
   override def main: Opts[IO[ExitCode]] =
     CLIParameters.config map { config =>
       val epoch = java.time.Instant.now()
-      val uri = Uri.fromString("https://www.3qe.us").toOption.get
+      val uris = config.targetUri.map(uri => Uri.fromString(uri.toString).right.get)
       given client: Client[IO] = curlClient
       for
-        score <- Util.backgroundIndicator("Fetching PSI score...") use { _ =>
-          PSI().fetchPsiScore(uri, config.psiKey)
+        scores <- Util.backgroundIndicator("Fetching PSI score...") use { _ =>
+          uris.map(uri => PSI().fetchPsiScore(uri, config.psiKey).map(uri -> _)).parSequence
         }
         _ <- config.mackerelKey match
           case Some(mackerelKey) =>
@@ -33,21 +34,25 @@ object Main
             for
               _ <- Util
                 .backgroundIndicator("Defining Graph definition...")
-                .use { _ => defineMackerelGraphDefinition(uri) }
+                .use { _ => defineMackerelGraphDefinition(uris)  }
               _ <- Util.backgroundIndicator("Posting service metrics...").use {
                 _ =>
-                  val safeUrl =
-                    uri.toString.replaceAll("""[^a-zA-Z0-9_\-]""", "-")
-                  mc.postServiceMetrics(
-                    "WWW",
-                    Seq(
-                      MackerelClient.ServiceMetric(
-                        s"custom.pagespeed.$safeUrl",
-                        epoch,
-                        score.get * 100
-                      )
-                    )
-                  ) // TODO
+                scores.map {
+                  case (uri, Some(score)) =>
+                    val safeUrl =
+                        uri.toString.replaceAll("""[^a-zA-Z0-9_\-]""", "-")
+                    mc.postServiceMetrics(
+                        "WWW",
+                        Seq(
+                            MackerelClient.ServiceMetric(
+                                s"custom.pagespeed.$safeUrl",
+                                epoch,
+                                score * 100
+                            )
+                        )
+                  )
+                  case (uri, None) => IO.unit// nop
+                }.parSequence
               }
             yield ()
           case None => IO.unit
@@ -55,23 +60,20 @@ object Main
       yield cats.effect.ExitCode(0)
     }
 
-  private def defineMackerelGraphDefinition(uri: Uri)(using
+  private def defineMackerelGraphDefinition(uris: NonEmptyList[Uri])(using
       mc: MackerelClient
   ): IO[Unit] =
-    val safeUrl = uri.toString.replaceAll("""[^a-zA-Z0-9_\-]""", "-")
-    mc.defineGraph(
-      Seq(
-        MackerelClient.GraphDefinition(
-          name = "custom.pagespeed",
-          displayName = uri.toString.some,
-          unit = "percentage".some,
-          metrics = Seq(
-            MackerelClient.Metric(
-              name = s"custom.pagespeed.$safeUrl",
-              displayName = uri.toString.some,
-              isStacked = false
-            )
-          )
-        )
+    val metrics = uris.map { uri =>
+      val safeUrl = uri.toString.replaceAll("""[^a-zA-Z0-9_\-]""", "-")
+      MackerelClient.Metric(
+        name = s"custom.pagespeed.$safeUrl",
+        displayName = uri.toString.some,
+        isStacked = false
       )
+    }.toList
+    val graph = MackerelClient.GraphDefinition(
+      name = "custom.pagespeed",
+      unit = "percentage".some,
+      metrics = metrics,
     )
+    mc.defineGraph(graph.pure[Seq])

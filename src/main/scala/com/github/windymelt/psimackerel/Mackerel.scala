@@ -63,14 +63,14 @@ object MackerelClient:
   import java.time.Instant
   case class GraphDefinition(
       name: String,
-      displayName: Option[String],
+      displayName: Option[String] = Some("Page Speed Insights score"),
       unit: Option[String],
-      metrics: Seq[Metric]
+      metrics: Seq[Metric],
   )
   case class Metric(
       name: String,
       displayName: Option[String],
-      isStacked: Boolean
+      isStacked: Boolean,
   )
   case class ServiceMetric(name: String, time: Instant, value: Double)
   case class SuccessfulResponse(success: true)
