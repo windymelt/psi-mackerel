@@ -25,7 +25,6 @@ object Main
         score <- Util.backgroundIndicator("Fetching PSI score...") use { _ =>
           PSI().fetchPsiScore(uri, config.psiKey)
         }
-        _ <- IO.println(s"ok: $score")
         _ <- config.mackerelKey match
           case Some(mackerelKey) =>
             import MackerelClient.given
@@ -52,6 +51,7 @@ object Main
               }
             yield ()
           case None => IO.unit
+        _ <- IO.println("")
       yield cats.effect.ExitCode(0)
     }
 
