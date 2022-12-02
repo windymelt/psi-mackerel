@@ -24,7 +24,7 @@ object Main
       given client: Client[IO] = curlClient
       for
         scores <- Util.backgroundIndicator("Fetching PSI score...") use { _ =>
-          uris.map(uri => PSI().fetchPsiScore(uri, config.psiKey).map(uri -> _)).parSequence
+          uris.map(uri => PSI().fetchPsiScore(uri, config.psiKey).map(uri -> _)).parSequence // but scala native doesn't support multithreading yet
         }
         _ <- config.mackerelKey match
           case Some(mackerelKey) =>
