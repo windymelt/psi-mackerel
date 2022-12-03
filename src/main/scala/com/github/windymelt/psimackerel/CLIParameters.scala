@@ -6,6 +6,7 @@ import com.monovore.decline.effect._
 import java.net.URI
 import cats.data.NonEmptyList
 import java.nio.file.Path
+import fansi.Color
 
 object CLIParameters:
   case class Config(psiKey: Option[String], mackerelKey: Option[String], mackerelService: Option[String], targetUris: NonEmptyList[URI] | Path)
@@ -35,5 +36,9 @@ object CLIParameters:
   def genericTargetUris: Opts[NonEmptyList[URI] | Path] = targetUriFile orElse targetUris
 
   val targetUris = Opts.arguments[URI]("target uri")
+    .validate(errorString("URI should contain scheme (HTTP / HTTPS). (Try prepending https://)"))
+      (nel => nel.forall(u => Seq("http", "https")contains(u.getScheme())))
 
   val targetUriFile = Opts.option[Path]("target-list", "Target URI list: one URI per line. Precedes by-argument URI list.", "f", "target list file")
+
+  private def errorString(s: String): String = fansi.Color.Red(s).toString
