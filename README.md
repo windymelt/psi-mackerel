@@ -61,6 +61,11 @@ This tool is inspired from https://github.com/aereal/psi-metrics .
 
 ## Release
 
+- Bump version in `build.sbt`
+- Generate binary
+- Rename and Gzip it
+- Release
+
 You will need `llvm-gold` for LTO.
 
 ```
