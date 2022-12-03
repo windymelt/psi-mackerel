@@ -9,7 +9,7 @@ lazy val root = project
   .in(file("."))
   .settings(
     name := "psi-mackerel",
-    version := "1.0.0",
+    version := "1.0.1",
 
     scalaVersion := scala3Version,
 
