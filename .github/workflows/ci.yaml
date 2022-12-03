@@ -11,5 +11,5 @@ jobs:
         with:
           java-version: amazon-corretto@1.17.0-0.35.1
       - run: sbt compile
-      - run: apt install -y libcurl-dev
+      - run: sudo apt install -y libcurl-dev
       - run: sbt nativeLink
