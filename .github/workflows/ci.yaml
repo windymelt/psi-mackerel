@@ -13,3 +13,11 @@ jobs:
       - run: sbt compile
       - run: sudo apt install -y libcurl4-openssl-dev
       - run: sbt nativeLink
+      - uses: windymelt/psi-mackerel@311b9babb1b2c260ab0bfd5d3179d1cd4fd6d674
+        with:
+          urls: |
+            https://example.com/
+            https://www.3qe.us/
+          mackerel_api_token: "" # for test
+          mackerel_service: "" # for test
+
