@@ -18,13 +18,12 @@ inputs:
   version:
     description: 'Binary version'
     required: true
-    default: 'v1.0.1'
+    default: 'v1.0.2'
 runs:
   using: "composite"
   steps:
     - run: |
-        wget https://github.com/windymelt/psi-mackerel/releases/download/${{ inputs.version }}/psi-mackerel_x86_64.gz
-        gzip -d psi-mackerel_x86_64.gz
+        wget https://github.com/windymelt/psi-mackerel/releases/download/${{ inputs.version }}/psi-mackerel_x86_64
         chmod u+x psi-mackerel_x86_64
         mv psi-mackerel_x86_64 psi
         echo "${{ inputs.urls }}" | xargs ./psi --psi-api-key "${{ inputs.psi_token }}" --mackerel-api-key "${{ inputs.mackerel_token }}" --service "${{ inputs.mackerel_service }}"
