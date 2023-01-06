@@ -11,7 +11,7 @@ inputs:
   mackerel_service:
     description: 'Service name for Mackerel'
     required: true
-  psi_token:
+  psi_api_token:
     description: 'Token for Page Speed Insights'
     required: true
     default: ''
@@ -26,5 +26,5 @@ runs:
         wget https://github.com/windymelt/psi-mackerel/releases/download/${{ inputs.version }}/psi-mackerel_x86_64
         chmod u+x psi-mackerel_x86_64
         mv psi-mackerel_x86_64 psi
-        echo "${{ inputs.urls }}" | xargs ./psi --psi-api-key "${{ inputs.psi_token }}" --mackerel-api-key "${{ inputs.mackerel_token }}" --service "${{ inputs.mackerel_service }}"
+        echo "${{ inputs.urls }}" | xargs ./psi --psi-api-key "${{ inputs.psi_api_token }}" --mackerel-api-key "${{ inputs.mackerel_api_token }}" --service "${{ inputs.mackerel_service }}"
       shell: bash
