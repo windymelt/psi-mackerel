@@ -15,24 +15,24 @@ object Util:
   private def indicator(m: String): IO[Unit] = (
     for
       _ <- Console[IO].error(s"\r| $m")
-      _ <- IO.sleep(100 milliseconds)
+      _ <- IO.sleep(1 second)
       _ <- Console[IO].error(s"\r/ $m")
-      _ <- IO.sleep(100 milliseconds)
+      _ <- IO.sleep(1 second)
       _ <- Console[IO].error(s"\r- $m")
-      _ <- IO.sleep(100 milliseconds)
+      _ <- IO.sleep(1 second)
       _ <- Console[IO].error(s"\r\\ $m")
-    yield IO.sleep(100 milliseconds)
+    yield IO.sleep(1 second)
   ).foreverM
 
   private def indicatorWithCount(m: String, current: Ref[IO, Int], all: Int): IO[Unit] = (
     for
       c <- current.get
       _ <- Console[IO].error(s"\r| $m [$c / $all]")
-      _ <- IO.sleep(100 milliseconds)
+      _ <- IO.sleep(1 second)
       _ <- Console[IO].error(s"\r/ $m [$c / $all]")
-      _ <- IO.sleep(100 milliseconds)
+      _ <- IO.sleep(1 second)
       _ <- Console[IO].error(s"\r- $m [$c / $all]")
-      _ <- IO.sleep(100 milliseconds)
+      _ <- IO.sleep(1 second)
       _ <- Console[IO].error(s"\r\\ $m [$c / $all]")
-    yield IO.sleep(100 milliseconds)
+    yield IO.sleep(1 second)
   ).foreverM
