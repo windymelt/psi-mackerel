@@ -1,0 +1,30 @@
+name: 'Post PSI score to Mackerel'
+description: 'Acquire Page Speed Insights score and post it to Mackerel.io'
+inputs:
+  urls:
+    description: 'List of URL. One URL per line.'
+    required: true
+    default: ''
+  mackerel_api_token:
+    description: 'Token for Mackerel'
+    required: true
+  mackerel_service:
+    description: 'Service name for Mackerel'
+    required: true
+  psi_token:
+    description: 'Token for Page Speed Insights'
+    required: true
+    default: ''
+  version:
+    description: 'Binary version'
+    required: true
+    default: 'v1.0.1'
+outputs:
+runs:
+  using: "composite"
+  steps:
+    wget https://github.com/windymelt/psi-mackerel/releases/download/${{ inputs.version }}/psi-mackerel_x86_64.gz
+    gzip -d psi-mackerel_x86_64.gz
+    chmod u+x psi-mackerel_x86_64
+    mv psi-mackerel_x86_64 psi
+    echo "${{ inputs.urls }}" | xargs psi --psi-api-key "${{ inputs.psi_token }}" --mackerel-api-key "${{ inputs.mackerel_token }}" --service "${{ inputs.mackerel_service }}"
