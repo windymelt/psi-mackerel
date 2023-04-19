@@ -1,32 +1,49 @@
 package com.github.windymelt.psimackerel
 
-import cats.effect.{IOApp, IO, ResourceIO, Resource, ExitCode}
+import cats.data.NonEmptyList
+import cats.effect.ExitCode
+import cats.effect.IO
+import cats.effect.IOApp
+import cats.effect.Resource
+import cats.effect.ResourceIO
 import cats.effect.std.Console
-import org.http4s.Uri
-import org.http4s.curl.CurlApp
-import org.http4s.client.Client
+import cats.implicits._
 import com.monovore.decline._
 import com.monovore.decline.effect._
-import cats.implicits._
-import cats.data.NonEmptyList
+import org.http4s.Uri
+import org.http4s.client.Client
+import org.http4s.curl.CurlApp
 
 object Main
     extends CommandIOApp(
       name = "psi-mackerel",
       header = "Post Google Page Speed Insights score to Mackerel",
-      version = "0.1.0"
+      version = "0.1.0",
     )
     with CurlApp:
 
   override def main: Opts[IO[ExitCode]] =
     CLIParameters.config map { config =>
       val epoch = java.time.Instant.now()
+      val strategy = config.strategy.getOrElse(Strategy.Desktop)
       given client: Client[IO] = curlClient
       for
         uris <- extractUris(config.targetUris)
         fetchedCount <- cats.effect.Ref.of[IO, Int](0)
-        scores <- Util.backgroundIndicatorWithCount("Fetching PSI score...", fetchedCount, uris.size) use { _ =>
-          uris.map(uri => (PSI().fetchPsiScore(uri, config.psiKey) <* fetchedCount.update(_ + 1)).map(uri -> _)).parSequence // but scala native doesn't support multithreading yet
+        scores <- Util.backgroundIndicatorWithCount(
+          "Fetching PSI score...",
+          fetchedCount,
+          uris.size,
+        ) use { _ =>
+          uris
+            .map(uri =>
+              (PSI().fetchPsiScore(
+                uri,
+                config.psiKey,
+                strategy = strategy,
+              ) <* fetchedCount.update(_ + 1)).map(uri -> _),
+            )
+            .parSequence // but scala native doesn't support multithreading yet
         }
         _ <- Console[IO].errorln("")
         _ <- Console[IO].errorln("All PSI scores are fetched")
@@ -38,41 +55,44 @@ object Main
             for
               _ <- Util
                 .backgroundIndicator("Defining Graph definition...")
-                .use { _ => defineMackerelGraphDefinition(uris)  }
+                .use { _ => defineMackerelGraphDefinition(uris) }
               _ <- Util.backgroundIndicator("Posting service metrics...").use {
                 _ =>
-                scores.map {
-                  case (uri, Some(score)) =>
-                    val safeUrl =
+                  scores.map {
+                    case (uri, Some(score)) =>
+                      val safeUrl =
                         uri.toString.replaceAll("""[^a-zA-Z0-9_\-]""", "-")
-                    mc.postServiceMetrics(
+                      mc.postServiceMetrics(
                         config.mackerelService.get,
                         Seq(
-                            MackerelClient.ServiceMetric(
-                                s"custom.pagespeed.$safeUrl",
-                                epoch,
-                                score * 100
-                            )
-                        )
-                  )
-                  case (uri, None) => IO.unit// nop
-                }.parSequence
+                          MackerelClient.ServiceMetric(
+                            s"custom.pagespeed.$strategy-$safeUrl",
+                            epoch,
+                            score * 100,
+                          ),
+                        ),
+                      )
+                    case (uri, None) => IO.unit // nop
+                  }.parSequence
               }
             yield ()
-          case None => scores.map { s => IO.println(s"${s._2.map(_ * 100).getOrElse('?')}	${s._1}") }.sequence
+          case None =>
+            scores.map { s =>
+              IO.println(s"${s._2.map(_ * 100).getOrElse('?')}	${s._1}")
+            }.sequence
         _ <- Console[IO].errorln("")
       yield cats.effect.ExitCode(0)
     }
 
   private def defineMackerelGraphDefinition(uris: NonEmptyList[Uri])(using
-      mc: MackerelClient
+      mc: MackerelClient,
   ): IO[Unit] =
     val metrics = uris.map { uri =>
       val safeUrl = uri.toString.replaceAll("""[^a-zA-Z0-9_\-]""", "-")
       MackerelClient.Metric(
         name = s"custom.pagespeed.$safeUrl",
         displayName = uri.toString.some,
-        isStacked = false
+        isStacked = false,
       )
     }.toList
     val graph = MackerelClient.GraphDefinition(
@@ -82,11 +102,19 @@ object Main
     )
     mc.defineGraph(graph.pure[Seq])
 
-  private def extractUris(genericUris: NonEmptyList[java.net.URI] | java.nio.file.Path): IO[NonEmptyList[Uri]] =
+  private def extractUris(
+      genericUris: NonEmptyList[java.net.URI] | java.nio.file.Path,
+  ): IO[NonEmptyList[Uri]] =
     import fs2.io.file.{Files, Path}
     import fs2.text
     genericUris match
-      case nel: NonEmptyList[java.net.URI] => nel.map(uri => Uri.fromString(uri.toString).right.get).pure
+      case nel: NonEmptyList[java.net.URI] =>
+        nel.map(uri => Uri.fromString(uri.toString).right.get).pure
       case path: java.nio.file.Path =>
-        val lisIo = Files[IO].readUtf8Lines(Path.fromNioPath(path)).filterNot(_.isBlank).map{ s => Uri.fromString(s).right.get }.compile.toList
+        val lisIo = Files[IO]
+          .readUtf8Lines(Path.fromNioPath(path))
+          .filterNot(_.isBlank)
+          .map { s => Uri.fromString(s).right.get }
+          .compile
+          .toList
         lisIo.map(lis => NonEmptyList.fromList(lis).get) // TODO: avoid get

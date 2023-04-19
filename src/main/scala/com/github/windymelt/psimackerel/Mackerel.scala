@@ -1,14 +1,14 @@
 package com.github.windymelt.psimackerel
 
 import cats.effect.IO
-import io.circe.Codec
+import com.github.windymelt.psimackerel.MackerelClient.GraphDefinition
 import com.github.windymelt.psimackerel.MackerelClient.ServiceMetric
+import io.circe.Codec
 import io.circe.Encoder
 import io.circe.Json
-import com.github.windymelt.psimackerel.MackerelClient.GraphDefinition
 
 class MackerelClient(apiKey: String)(using
-    client: org.http4s.client.Client[IO]
+    client: org.http4s.client.Client[IO],
 ):
   import org.http4s._
   import org.http4s.Method.POST
@@ -25,9 +25,9 @@ class MackerelClient(apiKey: String)(using
     val req = POST(
       reqUri,
       `Content-Type`(jsonType),
-      Header("X-Api-Key", apiKey)
+      Header("X-Api-Key", apiKey),
     ).withEntity(
-      json
+      json,
     ) // Don't .toString(): it modifies Content-Type into text/plain
 
     client.expectOr[SuccessfulResponse](req) { res =>
@@ -38,23 +38,23 @@ class MackerelClient(apiKey: String)(using
     }(jsonOf[IO, SuccessfulResponse]) *> IO.unit
 
   def defineGraph(defs: Seq[GraphDefinition])(using
-      GraphDefinitionEncoder: Encoder[GraphDefinition]
+      GraphDefinitionEncoder: Encoder[GraphDefinition],
   ): IO[Unit] =
     import org.http4s.implicits.uri
     import io.circe.syntax._
     postReq(
       uri"https://api.mackerelio.com/api/v0/graph-defs/create",
-      defs.asJson
+      defs.asJson,
     )
 
   def postServiceMetrics(serviceName: String, metrics: Seq[ServiceMetric])(using
-      ServiceMetricsEncoder: Encoder[ServiceMetric]
+      ServiceMetricsEncoder: Encoder[ServiceMetric],
   ): IO[Unit] =
     import org.http4s.implicits.uri
     import io.circe.syntax._
     postReq(
       uri"https://api.mackerelio.com/api/v0/services/" / serviceName / "tsdb",
-      metrics.asJson
+      metrics.asJson,
     )
 
 object MackerelClient:
