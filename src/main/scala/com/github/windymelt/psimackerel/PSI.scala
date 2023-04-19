@@ -36,13 +36,14 @@ class PSI():
       case None =>
         s"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=$targetUri"
 
-    val jIo: IO[Json] = client.expect[Json](url)
+    def resultPath(j: Json) = j.hcursor
+      .downField("lighthouseResult")
+      .downField("categories")
+      .downField("performance")
+      .get[Double]("score")
+      .toOption
+
     for {
-      j <- jIo
-      scoreJson <- (for {
-        res <- j \\ "lighthouseResult"
-        cat <- res \\ "categories"
-        perf <- cat \\ "performance"
-      } yield perf \\ "score").flatten.head.pure[IO]
-      score <- scoreJson.asNumber.map(_.toDouble).pure[IO]
+      j <- client.expect[Json](url)
+      score <- resultPath(j).pure[IO]
     } yield score
