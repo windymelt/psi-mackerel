@@ -22,10 +22,8 @@ class PSI():
   )(using
       client: org.http4s.client.Client[IO],
   ): IO[Option[Double]] =
-    import io.circe.syntax._
     import org.http4s.circe._
-    import cats.syntax.applicative.catsSyntaxApplicativeId
-    import io.circe.Encoder.encodeString
+    import cats.syntax.applicative.catsSyntaxApplicativeId // for .pure
     val strategyString = strategy match
       case Strategy.Desktop => "desktop"
       case Strategy.Mobile  => "mobile"
