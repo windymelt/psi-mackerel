@@ -8,7 +8,7 @@ import io.circe.Encoder
 import io.circe.Json
 
 class MackerelClient(apiKey: String)(using
-    client: org.http4s.client.Client[IO]
+    client: org.http4s.client.Client[IO],
 ):
   import org.http4s._
   import org.http4s.Method.POST
@@ -25,9 +25,9 @@ class MackerelClient(apiKey: String)(using
     val req = POST(
       reqUri,
       `Content-Type`(jsonType),
-      Header("X-Api-Key", apiKey)
+      Header("X-Api-Key", apiKey),
     ).withEntity(
-      json
+      json,
     ) // Don't .toString(): it modifies Content-Type into text/plain
 
     client.expectOr[SuccessfulResponse](req) { res =>
@@ -38,23 +38,23 @@ class MackerelClient(apiKey: String)(using
     }(jsonOf[IO, SuccessfulResponse]) *> IO.unit
 
   def defineGraph(defs: Seq[GraphDefinition])(using
-      GraphDefinitionEncoder: Encoder[GraphDefinition]
+      GraphDefinitionEncoder: Encoder[GraphDefinition],
   ): IO[Unit] =
     import org.http4s.implicits.uri
     import io.circe.syntax._
     postReq(
       uri"https://api.mackerelio.com/api/v0/graph-defs/create",
-      defs.asJson
+      defs.asJson,
     )
 
   def postServiceMetrics(serviceName: String, metrics: Seq[ServiceMetric])(using
-      ServiceMetricsEncoder: Encoder[ServiceMetric]
+      ServiceMetricsEncoder: Encoder[ServiceMetric],
   ): IO[Unit] =
     import org.http4s.implicits.uri
     import io.circe.syntax._
     postReq(
       uri"https://api.mackerelio.com/api/v0/services/" / serviceName / "tsdb",
-      metrics.asJson
+      metrics.asJson,
     )
 
 object MackerelClient:
@@ -65,12 +65,12 @@ object MackerelClient:
       name: String,
       displayName: Option[String] = Some("Page Speed Insights score"),
       unit: Option[String],
-      metrics: Seq[Metric]
+      metrics: Seq[Metric],
   )
   case class Metric(
       name: String,
       displayName: Option[String],
-      isStacked: Boolean
+      isStacked: Boolean,
   )
   case class ServiceMetric(name: String, time: Instant, value: Double)
   case class SuccessfulResponse(success: true)

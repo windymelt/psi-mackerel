@@ -16,7 +16,7 @@ object Util:
   def backgroundIndicatorWithCount(
       msg: String,
       current: Ref[IO, Int],
-      all: Int
+      all: Int,
   ): ResourceIO[IO[OutcomeIO[Unit]]] =
     indicatorWithCount(msg, current, all).background
 
@@ -35,7 +35,7 @@ object Util:
   private def indicatorWithCount(
       m: String,
       current: Ref[IO, Int],
-      all: Int
+      all: Int,
   ): IO[Unit] = (
     for
       c <- current.get

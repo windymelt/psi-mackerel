@@ -18,9 +18,9 @@ class PSI():
   def fetchPsiScore(
       targetUri: org.http4s.Uri,
       apiKey: Option[String] = None,
-      strategy: Strategy = Strategy.Desktop
+      strategy: Strategy = Strategy.Desktop,
   )(using
-      client: org.http4s.client.Client[IO]
+      client: org.http4s.client.Client[IO],
   ): IO[Option[Double]] =
     import io.circe.syntax._
     import org.http4s.circe._

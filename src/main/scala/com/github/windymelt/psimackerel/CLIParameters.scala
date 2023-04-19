@@ -16,7 +16,7 @@ object CLIParameters:
       mackerelKey: Option[String],
       mackerelService: Option[String],
       targetUris: NonEmptyList[URI] | Path,
-      strategy: Option[Strategy]
+      strategy: Option[Strategy],
   )
 
   // Main object以外の場所でvalにすると壊れる!!のでここだけdefとしている
@@ -26,7 +26,7 @@ object CLIParameters:
       apiKeyForMackerel,
       mackerelServiceName,
       genericTargetUris,
-      strategy
+      strategy,
     )
       .mapN(Config.apply)
 
@@ -35,7 +35,7 @@ object CLIParameters:
       "psi-api-key",
       metavar = "API_KEY",
       help =
-        "Optional: Set PSI API key (can get yours at https://developers.google.com/speed/docs/insights/v5/get-started). API may return 429 Too Many Requests error unless you give no API key."
+        "Optional: Set PSI API key (can get yours at https://developers.google.com/speed/docs/insights/v5/get-started). API may return 429 Too Many Requests error unless you give no API key.",
     )
     .orNone
 
@@ -44,7 +44,7 @@ object CLIParameters:
       "mackerel-api-key",
       short = "k",
       metavar = "API_KEY",
-      help = "Set Mackerel API key."
+      help = "Set Mackerel API key.",
     )
     .orNone
 
@@ -53,7 +53,7 @@ object CLIParameters:
       "service",
       short = "s",
       metavar = "service_name",
-      help = "Set Mackerel service name."
+      help = "Set Mackerel service name.",
     )
     .orNone
 
@@ -64,15 +64,15 @@ object CLIParameters:
     .arguments[URI]("target uri")
     .validate(
       errorString(
-        "URI should contain scheme (HTTP / HTTPS). (Try prepending https://)"
-      )
+        "URI should contain scheme (HTTP / HTTPS). (Try prepending https://)",
+      ),
     )(nel => nel.forall(u => Seq("http", "https") contains (u.getScheme())))
 
   val targetUriFile = Opts.option[Path](
     "target-list",
     "Target URI list: one URI per line. Precedes by-argument URI list.",
     "f",
-    "target list file"
+    "target list file",
   )
 
   val strategy: Opts[Option[Strategy]] =
@@ -81,7 +81,7 @@ object CLIParameters:
         "strategy",
         "Strategy for request",
         "S",
-        "desktop/mobile"
+        "desktop/mobile",
       )
       .orNone
       .mapValidated {

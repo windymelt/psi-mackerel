@@ -18,7 +18,7 @@ object Main
     extends CommandIOApp(
       name = "psi-mackerel",
       header = "Post Google Page Speed Insights score to Mackerel",
-      version = "0.1.0"
+      version = "0.1.0",
     )
     with CurlApp:
 
@@ -33,15 +33,15 @@ object Main
         scores <- Util.backgroundIndicatorWithCount(
           "Fetching PSI score...",
           fetchedCount,
-          uris.size
+          uris.size,
         ) use { _ =>
           uris
             .map(uri =>
               (PSI().fetchPsiScore(
                 uri,
                 config.psiKey,
-                strategy = strategy
-              ) <* fetchedCount.update(_ + 1)).map(uri -> _)
+                strategy = strategy,
+              ) <* fetchedCount.update(_ + 1)).map(uri -> _),
             )
             .parSequence // but scala native doesn't support multithreading yet
         }
@@ -68,9 +68,9 @@ object Main
                           MackerelClient.ServiceMetric(
                             s"custom.pagespeed.$strategy-$safeUrl",
                             epoch,
-                            score * 100
-                          )
-                        )
+                            score * 100,
+                          ),
+                        ),
                       )
                     case (uri, None) => IO.unit // nop
                   }.parSequence
@@ -85,25 +85,25 @@ object Main
     }
 
   private def defineMackerelGraphDefinition(uris: NonEmptyList[Uri])(using
-      mc: MackerelClient
+      mc: MackerelClient,
   ): IO[Unit] =
     val metrics = uris.map { uri =>
       val safeUrl = uri.toString.replaceAll("""[^a-zA-Z0-9_\-]""", "-")
       MackerelClient.Metric(
         name = s"custom.pagespeed.$safeUrl",
         displayName = uri.toString.some,
-        isStacked = false
+        isStacked = false,
       )
     }.toList
     val graph = MackerelClient.GraphDefinition(
       name = "custom.pagespeed",
       unit = "percentage".some,
-      metrics = metrics
+      metrics = metrics,
     )
     mc.defineGraph(graph.pure[Seq])
 
   private def extractUris(
-      genericUris: NonEmptyList[java.net.URI] | java.nio.file.Path
+      genericUris: NonEmptyList[java.net.URI] | java.nio.file.Path,
   ): IO[NonEmptyList[Uri]] =
     import fs2.io.file.{Files, Path}
     import fs2.text
