@@ -1,11 +1,11 @@
 package com.github.windymelt.psimackerel
 
 import cats.effect.IO
-import io.circe.Codec
+import com.github.windymelt.psimackerel.MackerelClient.GraphDefinition
 import com.github.windymelt.psimackerel.MackerelClient.ServiceMetric
+import io.circe.Codec
 import io.circe.Encoder
 import io.circe.Json
-import com.github.windymelt.psimackerel.MackerelClient.GraphDefinition
 
 class MackerelClient(apiKey: String)(using
     client: org.http4s.client.Client[IO]
@@ -65,12 +65,12 @@ object MackerelClient:
       name: String,
       displayName: Option[String] = Some("Page Speed Insights score"),
       unit: Option[String],
-      metrics: Seq[Metric],
+      metrics: Seq[Metric]
   )
   case class Metric(
       name: String,
       displayName: Option[String],
-      isStacked: Boolean,
+      isStacked: Boolean
   )
   case class ServiceMetric(name: String, time: Instant, value: Double)
   case class SuccessfulResponse(success: true)
