@@ -3,6 +3,9 @@ package com.github.windymelt.psimackerel
 import cats.effect.IO
 import io.circe.Json
 
+enum Strategy:
+  case Desktop, Mobile
+
 class PSI():
   /** Fetches Page Speed Insight Score.
     *

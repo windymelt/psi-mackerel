@@ -8,6 +8,7 @@ import fansi.Color
 
 import java.net.URI
 import java.nio.file.Path
+import cats.data.Validated
 
 object CLIParameters:
   case class Config(
@@ -15,7 +16,7 @@ object CLIParameters:
       mackerelKey: Option[String],
       mackerelService: Option[String],
       targetUris: NonEmptyList[URI] | Path,
-      userAgent: Option[String]
+      strategy: Option[Strategy]
   )
 
   // Main object以外の場所でvalにすると壊れる!!のでここだけdefとしている
@@ -25,7 +26,7 @@ object CLIParameters:
       apiKeyForMackerel,
       mackerelServiceName,
       genericTargetUris,
-      userAgent
+      strategy
     )
       .mapN(Config.apply)
 
@@ -74,9 +75,21 @@ object CLIParameters:
     "target list file"
   )
 
-  val userAgent =
+  val strategy: Opts[Option[Strategy]] =
     Opts
-      .option[String]("user-agent", "User Agent for request", "A", "agent")
+      .option[String](
+        "strategy",
+        "Strategy for request",
+        "S",
+        "desktop/mobile"
+      )
       .orNone
+      .mapValidated {
+        case Some("desktop") => Validated.Valid(Strategy.Desktop.pure)
+        case Some("mobile")  => Validated.Valid(Strategy.Mobile.pure)
+        case Some(_) =>
+          Validated.Invalid("Strategy should be one of desktop or mobile".pure)
+        case None => Validated.Valid(None)
+      }
 
 private def errorString(s: String): String = fansi.Color.Red(s).toString
