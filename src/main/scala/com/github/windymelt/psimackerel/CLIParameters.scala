@@ -14,12 +14,19 @@ object CLIParameters:
       psiKey: Option[String],
       mackerelKey: Option[String],
       mackerelService: Option[String],
-      targetUris: NonEmptyList[URI] | Path
+      targetUris: NonEmptyList[URI] | Path,
+      userAgent: Option[String]
   )
 
   // Main object以外の場所でvalにすると壊れる!!のでここだけdefとしている
   def config =
-    (apiKeyForPsi, apiKeyForMackerel, mackerelServiceName, genericTargetUris)
+    (
+      apiKeyForPsi,
+      apiKeyForMackerel,
+      mackerelServiceName,
+      genericTargetUris,
+      userAgent
+    )
       .mapN(Config.apply)
 
   val apiKeyForPsi = Opts
@@ -66,5 +73,10 @@ object CLIParameters:
     "f",
     "target list file"
   )
+
+  val userAgent =
+    Opts
+      .option[String]("user-agent", "User Agent for request", "A", "agent")
+      .orNone
 
 private def errorString(s: String): String = fansi.Color.Red(s).toString
