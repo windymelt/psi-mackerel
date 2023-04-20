@@ -18,7 +18,11 @@ inputs:
   version:
     description: 'Binary version'
     required: true
-    default: 'v1.0.2'
+    default: 'v2.0.1'
+  strategy:
+    description: 'desktop or mobile'
+    required: true
+    default: 'desktop'
 runs:
   using: "composite"
   steps:
@@ -26,5 +30,5 @@ runs:
         wget https://github.com/windymelt/psi-mackerel/releases/download/${{ inputs.version }}/psi-mackerel_x86_64
         chmod u+x psi-mackerel_x86_64
         mv psi-mackerel_x86_64 psi
-        echo "${{ inputs.urls }}" | xargs ./psi --psi-api-key "${{ inputs.psi_api_token }}" --mackerel-api-key "${{ inputs.mackerel_api_token }}" --service "${{ inputs.mackerel_service }}"
+        echo "${{ inputs.urls }}" | xargs ./psi --psi-api-key "${{ inputs.psi_api_token }}" --mackerel-api-key "${{ inputs.mackerel_api_token }}" --service "${{ inputs.mackerel_service }}" -S "${{ inputs.strategy }}"
       shell: bash
