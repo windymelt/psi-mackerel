@@ -9,7 +9,7 @@ lazy val root = project
   .in(file("."))
   .settings(
     name := "psi-mackerel",
-    version := "1.0.2",
+    version := "2.0.1",
     scalaVersion := scala3Version,
     libraryDependencies ++= Seq(
 //      "org.typelevel" %% "cats-core" % "2.9.0",
